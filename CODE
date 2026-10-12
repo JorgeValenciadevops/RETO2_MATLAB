@@ -1,0 +1,65 @@
+% RETO 2. MODELADO DE BALANCE HIBRIDO
+% JORGE VALENCIA RODRIGUEZ 
+% UNAD. iNGENIERIA ELECTRONICA
+% Proyecto SIGE  Simulacion de 24 horas de la micro-red
+% Este programa simula la energia solar, la eolica y la demanda del pueblo
+clc; clear; close all;
+% ---------------------------------------------------
+% Datos del problema
+horas = 1:24;          % vector con las 24 horas del dia
+Pmax_solar = 25;       % potencia maxima solar en kW
+Pmax_eolica = 15;      % potencia maxima eolica en kW
+Pmax_demanda = 15;     % potencia maxima de la demanda en kW
+% ---------------------------------------------------
+% a. Generacion solar
+% Empieza en 0, sube hasta la hora 12 y despues baja
+solar = zeros(1,24);   % se crea el vector lleno de ceros
+for h = 6:18           % solo hay sol de la hora 6 a la 18
+    solar(h) = Pmax_solar * sin(pi*(h-5)/14);   % curva en forma de campana
+end
+% las horas 1 a 5 y 19 a 24 quedan en 0 (noche)
+% ---------------------------------------------------
+% Generacion eolica
+% Valores que suben y bajan sin orden porque el viento cambia (en kW)
+eolica = [6 8 5 9 11 7 4 6 10 13 9 5 7 12 14 10 6 8 11 13 9 5 7 10];
+% Revisar que nunca pase de 15 kW
+if max(eolica) <= Pmax_eolica
+    disp('La generacion eolica no supera los 15 kW');
+else
+    disp('Cuidado: la generacion eolica supera los 15 kW');
+end
+% ---------------------------------------------------
+% Generacion total (solar + eolica)
+% ---------------------------------------------------
+generacion_total = solar + eolica;
+% ---------------------------------------------------
+% Demanda de la comunidad
+% ---------------------------------------------------
+demanda = zeros(1,24);
+demanda(1:5)   = [3 2.5 2 2.5 3];                       % horas 1 a 5: entre 2 y 4 kW
+demanda(6:17)  = [6 7 8 9 10 9 8 9 10 8 7 6];           % horas 6 a 17: entre 6 y 10 kW
+demanda(18:21) = Pmax_demanda;                          % horas 18 a 21: pico de 15 kW
+demanda(22:24) = [4 3 2.5];                             % horas 22 a 24: entre 2 y 4 kW
+% ---------------------------------------------------
+% Grafica
+figure;
+plot(horas, generacion_total, 'b-o', 'LineWidth', 2);   % generacion en azul
+hold on;
+plot(horas, demanda, 'r-s', 'LineWidth', 2);            % demanda en rojo
+hold off;
+title('Generacion Total vs Demanda de la Comunidad (24 horas)');
+xlabel('Tiempo (horas)');
+ylabel('Potencia (kW)');
+grid on;
+legend('Generacion Total', 'Demanda del pueblo');
+xlim([1 24]);
+% ---------------------------------------------------
+% Resultados que se muestran en la ventana de comandos
+% ---------------------------------------------------
+fprintf('Generacion solar maxima: %.1f kW\n', max(solar));
+fprintf('Generacion total maxima: %.1f kW\n', max(generacion_total));
+fprintf('Demanda maxima: %.1f kW\n', max(demanda));
+% Horas donde la demanda es mayor que la generacion (falta energia)
+faltante = find(demanda > generacion_total);
+disp('Horas donde falta energia:');
+disp(faltante);
